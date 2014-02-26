@@ -6,7 +6,6 @@ class CrawlControlActor extends Actor {
   override def receive = {
     case StartCrawling =>
       context.system.log.info("started crawling")
-      println("#$#$$$$$#$#$%#$#$%#")
     case StopCrawling =>
       context.system.log.info("stopped crawling")
     case _ =>
