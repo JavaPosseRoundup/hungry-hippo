@@ -1,10 +1,10 @@
 package com.javaposse.hungryhippo.models
 
-case class ModuleId(groupId: String, artifactId: String, version: Option[String])
+case class Coordinate(groupId: String, artifactId: String, version: Option[String])
 
 case class Module(
-    id: ModuleId,
+    id: Coordinate,
     repoUrl: String,
-    dependencies: Seq[ModuleId]
+    dependencies: Seq[Coordinate]
 )
 
