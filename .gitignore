@@ -6,7 +6,9 @@ tmp
 .history
 dist
 /.idea
-/*.iml
+*.iml
+*.ipr
+*.iws
 /out
 /.idea_modules
 /.classpath
