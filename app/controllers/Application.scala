@@ -1,16 +1,12 @@
 package controllers
 
 import com.javaposse.hungryhippo.actors.{CrawlState, ActorRefs, StopCrawling, StartCrawling}
-import play.api.mvc._
 import akka.util.Timeout
 import akka.pattern.ask
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.mvc._
 import com.javaposse.hungryhippo.actors.ControllerState
-import play.api._
-import play.api.Play.current
-
 
 object Application extends Controller {
   implicit val askTimeout = Timeout(2.seconds)
