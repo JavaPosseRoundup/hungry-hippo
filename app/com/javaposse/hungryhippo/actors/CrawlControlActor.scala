@@ -34,12 +34,12 @@ class CrawlControlActor extends Actor {
       updateWatchers
 
       // Create actors for CrawlDirectoryActor, LoadCoordianteActor, ParseMavenMetadataActor
-      val crawlDirectoryRouter = Akka.system.actorOf(Props[CrawlDirectoryActor].withRouter(
-        RoundRobinRouter(nrOfInstances = 1)), "crawlDirectory")
+      val crawlDirectoryRouter = context.actorOf(Props[CrawlDirectoryActor].withRouter(
+        RoundRobinRouter(nrOfInstances = 5)), "crawlDirectory")
       val loadCoordinateRouter = Akka.system.actorOf(Props[LoadCoordinateActor].withRouter(
-        RoundRobinRouter(nrOfInstances = 1)), "loadCoordinate")
+        RoundRobinRouter(nrOfInstances = 5)), "loadCoordinate")
       val parseMavenMetadataRouter = Akka.system.actorOf(Props[ParseMavenMetadataActor].withRouter(
-        RoundRobinRouter(nrOfInstances = 1)), "parseMavenMetadata")
+        RoundRobinRouter(nrOfInstances = 5)), "parseMavenMetadata")
 
       Play.current.configuration.getStringList("crawl.roots") match {
         case Some(x) =>
