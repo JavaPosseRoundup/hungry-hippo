@@ -34,9 +34,8 @@ class ParseMavenMetadataActor extends Actor {
       val versions: Seq[String] = versionElements.map(_.text)
 
       val coordinates = versions.map( Coordinate(groupId, artifactId, _) )
-
       coordinates.map(LoadCoordinate(p.dir, _)).foreach {
-        context.actorSelection("/user/loadCoordinateActor") ! _
+        context.actorSelection("/user/loadCoordinate") ! _
       }
     }
   }
