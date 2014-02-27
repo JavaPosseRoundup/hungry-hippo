@@ -1,20 +1,14 @@
 package com.javaposse.hungryhippo.actors
 
-import akka.actor.{ActorRef, Actor}
+import akka.actor.ActorRef
 import akka.actor.{PoisonPill, Props, Actor}
-import play.api.Play
-import play.api.libs.concurrent.Akka
-import play.api.Play.current
 import akka.routing.RoundRobinRouter
-import scala.collection.JavaConversions._
-import akka.actor.SupervisorStrategy.Stop
-import akka.actor.{PoisonPill, Props, Actor}
 import play.api.Play
-import play.api.libs.concurrent.Akka
 import play.api.Play.current
-import akka.routing.RoundRobinRouter
+import play.api.libs.concurrent.Akka
 import scala.collection.JavaConversions._
-import akka.actor.SupervisorStrategy.Stop
+import scala.collection.mutable
+import play.Logger
 
 sealed abstract class CrawlControlMessage
 case object StartCrawling extends CrawlControlMessage
@@ -30,13 +24,14 @@ case object Stopped extends ControllerState
 class CrawlControlActor extends Actor {
 
   private var state: ControllerState = Stopped
-  private val watchers: scala.collection.mutable.Set[ActorRef] = scala.collection.mutable.HashSet()
+  private val watchers: mutable.Set[ActorRef] = mutable.HashSet()
 
   override def receive = {
     case CrawlState =>
       sender ! state
     case StartCrawling if (state == Stopped) => {
       state = Started
+      updateWatchers
 
       // Create actors for CrawlDirectoryActor, LoadCoordianteActor, ParseMavenMetadataActor
       val crawlDirectoryRouter = Akka.system.actorOf(Props[CrawlDirectoryActor].withRouter(
@@ -56,6 +51,8 @@ class CrawlControlActor extends Actor {
     }
     case StopCrawling if (state == Started) => {
       state = Stopped
+      updateWatchers
+
       // Shutdown routers
       context.actorSelection("/user/crawlDirectory") ! PoisonPill
       context.actorSelection("/user/loadCoordinate") !  PoisonPill
@@ -63,6 +60,7 @@ class CrawlControlActor extends Actor {
 
     }
     case WatchCrawlState =>
+      Logger.info("adding actor to watch crawl state")
       watchers += sender
     case UnwatchCrawlState =>
       watchers -= sender
@@ -71,7 +69,7 @@ class CrawlControlActor extends Actor {
   }
 
   def updateWatchers = {
-    watchers.foreach{ _ ! state}
+    watchers.foreach{ _ ! StateChanged(state)}
   }
 }
 

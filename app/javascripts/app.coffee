@@ -25,12 +25,12 @@ utils.filter('timer' ,['time', (time) ->
 
   startWS = ->
     wsUrl = jsRoutes.controllers.AppController.indexWS().webSocketURL()
-
+  
     $scope.socket = new WebSocket(wsUrl)
     $scope.socket.onmessage = (msg) ->
       $scope.$apply( ->
         console.log "received : #{msg}"
-        $scope.time = JSON.parse(msg.data).data
+        $scope.time = JSON.parse(msg.data).data      
       )
 
   $scope.start = ->
@@ -41,7 +41,7 @@ utils.filter('timer' ,['time', (time) ->
 
   startWS()
 
-)
+) 
 
 window.angular.module('app' , ['utils'])
 
