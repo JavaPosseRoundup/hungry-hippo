@@ -27,7 +27,10 @@ object Application extends Controller {
     val stateResponse = crawlControlActor ? CrawlState
     stateResponse.map {
       case status: ControllerState =>
-        Ok(status.toString)
+        val json = Map("state" -> status.toString)
+        val out: JsValue = Json.toJson(json)
+
+        Ok(out.toString)
       case _ =>
         InternalServerError("Unknown Error")
     } recover {
@@ -66,7 +69,8 @@ object Application extends Controller {
     implicit request =>
       Ok(
         Routes.javascriptRouter("jsRoutes")(
-          routes.javascript.Application.crawlerStatusWs
+          routes.javascript.Application.crawlerStatusWs,
+          routes.javascript.Application.crawlerStatus
         )
       ).as("text/javascript")
   }
