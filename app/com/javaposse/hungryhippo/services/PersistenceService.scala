@@ -11,6 +11,8 @@ trait PersistenceService
     def saveOrUpdateModule(modlue: Module): Future[Unit]
 
     def findModule(coordinate: Coordinate) : Future[Option[Module]]
+
+    def removeModule(coordinate: Coordinate): Future[Unit]
 }
 
 
