@@ -20,7 +20,7 @@ object Application extends Controller {
   import ActorRefs._
 
   def index = Action {
-    Ok(views.html.index("Hello Play Framework"))
+    Ok(views.html.index())
   }
 
   def crawlerStatus = Action.async {
