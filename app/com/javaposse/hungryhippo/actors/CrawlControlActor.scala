@@ -22,38 +22,47 @@ class CrawlControlActor(notificationActor: ActorRef) extends Actor {
 
   private var state: CrawlState = Stopped
 
+  private var crawlDirectoryRouter: Option[ActorRef] = None
+  private var loadCoordinateRouter: Option[ActorRef] = None
+  private var parseMavenMetadataRouter: Option[ActorRef] = None
+
   override def receive = {
     case StartCrawling if (state == Stopped) =>
       state = Started
       notificationActor ! CrawlStateChanged(state)
 
       // Create actors for CrawlDirectoryActor, LoadCoordianteActor, ParseMavenMetadataActor
-      val crawlDirectoryRouter = context.actorOf(Props[CrawlDirectoryActor].withRouter(
-        RoundRobinRouter(nrOfInstances = 5)), "crawlDirectory")
-      val loadCoordinateRouter = Akka.system.actorOf(Props[LoadCoordinateActor].withRouter(
-        RoundRobinRouter(nrOfInstances = 5)), "loadCoordinate")
-      val parseMavenMetadataRouter = Akka.system.actorOf(Props[ParseMavenMetadataActor].withRouter(
-        RoundRobinRouter(nrOfInstances = 5)), "parseMavenMetadata")
+      crawlDirectoryRouter = Some(context.actorOf(Props[CrawlDirectoryActor].withRouter(
+        RoundRobinRouter(nrOfInstances = 5)), "crawlDirectory"))
+      loadCoordinateRouter = Some(Akka.system.actorOf(Props[LoadCoordinateActor].withRouter(
+        RoundRobinRouter(nrOfInstances = 5)), "loadCoordinate"))
+      parseMavenMetadataRouter = Some(Akka.system.actorOf(Props[ParseMavenMetadataActor].withRouter(
+        RoundRobinRouter(nrOfInstances = 5)), "parseMavenMetadata"))
 
-      Play.current.configuration.getStringList("crawl.roots") match {
-        case Some(x) =>
-          x foreach {
-            context.actorSelection("/user/crawlDirectory") ! CrawlDirectory(_, "")
+      val maybeDirs: Option[List[String]] = Play.current.configuration.getStringList("crawl.roots").map(_.toList)
+      maybeDirs foreach { dirs: List[String] =>
+          dirs foreach { dir: String =>
+            crawlDirectoryRouter.foreach(_ ! CrawlDirectory(dir, ""))
           }
-        case None => throw new Exception("crawl.roots is undefined")
       }
+
     case StopCrawling if (state == Started) =>
       state = Stopped
       notificationActor ! CrawlStateChanged(state)
-
-      // Shutdown routers
-      context.actorSelection("/user/crawlDirectory") ! PoisonPill
-      context.actorSelection("/user/loadCoordinate") !  PoisonPill
-      context.actorSelection("/user/parseMavenMetadata") ! PoisonPill
+      killActors()
     case GetCrawlStatus =>
       sender ! state
     case _ =>
       context.system.log.info("do what now?")
+  }
+
+  private def killActors() {
+    crawlDirectoryRouter.foreach(_ ! PoisonPill)
+    loadCoordinateRouter.foreach(_ !  PoisonPill)
+    parseMavenMetadataRouter.foreach(_ ! PoisonPill)
+    crawlDirectoryRouter = None
+    loadCoordinateRouter = None
+    parseMavenMetadataRouter = None
   }
 }
 
