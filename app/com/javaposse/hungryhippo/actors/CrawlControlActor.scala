@@ -7,31 +7,25 @@ import play.api.Play
 import play.api.Play.current
 import play.api.libs.concurrent.Akka
 import scala.collection.JavaConversions._
-import scala.collection.mutable
-import play.Logger
+import com.javaposse.hungryhippo.event.Events.CrawlStateChanged
 
 sealed abstract class CrawlControlMessage
 case object StartCrawling extends CrawlControlMessage
 case object StopCrawling extends CrawlControlMessage
-case object CrawlState extends CrawlControlMessage
-case object WatchCrawlState extends CrawlControlMessage
-case object UnwatchCrawlState extends CrawlControlMessage
+case object GetCrawlStatus extends CrawlControlMessage
 
-sealed abstract class ControllerState
-case object Started extends ControllerState
-case object Stopped extends ControllerState
+sealed abstract class CrawlState
+case object Started extends CrawlState
+case object Stopped extends CrawlState
 
-class CrawlControlActor extends Actor {
+class CrawlControlActor(notificationActor: ActorRef) extends Actor {
 
-  private var state: ControllerState = Stopped
-  private val watchers: mutable.Set[ActorRef] = mutable.HashSet()
+  private var state: CrawlState = Stopped
 
   override def receive = {
-    case CrawlState =>
-      sender ! state
-    case StartCrawling if (state == Stopped) => {
+    case StartCrawling if (state == Stopped) =>
       state = Started
-      updateWatchers
+      notificationActor ! CrawlStateChanged(state)
 
       // Create actors for CrawlDirectoryActor, LoadCoordianteActor, ParseMavenMetadataActor
       val crawlDirectoryRouter = context.actorOf(Props[CrawlDirectoryActor].withRouter(
@@ -48,28 +42,18 @@ class CrawlControlActor extends Actor {
           }
         case None => throw new Exception("crawl.roots is undefined")
       }
-    }
-    case StopCrawling if (state == Started) => {
+    case StopCrawling if (state == Started) =>
       state = Stopped
-      updateWatchers
+      notificationActor ! CrawlStateChanged(state)
 
       // Shutdown routers
       context.actorSelection("/user/crawlDirectory") ! PoisonPill
       context.actorSelection("/user/loadCoordinate") !  PoisonPill
       context.actorSelection("/user/parseMavenMetadata") ! PoisonPill
-
-    }
-    case WatchCrawlState =>
-      Logger.info("adding actor to watch crawl state")
-      watchers += sender
-    case UnwatchCrawlState =>
-      watchers -= sender
+    case GetCrawlStatus =>
+      sender ! state
     case _ =>
       context.system.log.info("do what now?")
-  }
-
-  def updateWatchers = {
-    watchers.foreach{ _ ! StateChanged(state)}
   }
 }
 

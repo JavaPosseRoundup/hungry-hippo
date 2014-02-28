@@ -24,9 +24,9 @@ object Application extends Controller {
   }
 
   def crawlerStatus = Action.async {
-    val stateResponse = crawlControlActor ? CrawlState
+    val stateResponse = crawlControlActor ? GetCrawlStatus
     stateResponse.map {
-      case status: ControllerState =>
+      case status: CrawlState =>
         val json = Map("state" -> status.toString)
         val out: JsValue = Json.toJson(json)
 
@@ -52,7 +52,7 @@ object Application extends Controller {
 
   def crawlerStatusWs = WebSocket.async[JsValue] { request =>
     val (out, channel) = Concurrent.broadcast[JsValue]
-    val listeningActor = Akka.system.actorOf(Props(classOf[StatusListeningActor], ActorRefs.crawlControlActor, channel))
+    val listeningActor = Akka.system.actorOf(Props(classOf[WebSocketActor], ActorRefs.crawlControlActor, channel))
 
     val in = Iteratee.foreach[JsValue] { message =>
       Logger.info(s"Received WebSocket message: $message")
