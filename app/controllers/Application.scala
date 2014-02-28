@@ -70,7 +70,9 @@ object Application extends Controller {
       Ok(
         Routes.javascriptRouter("jsRoutes")(
           routes.javascript.Application.crawlerStatusWs,
-          routes.javascript.Application.crawlerStatus
+          routes.javascript.Application.crawlerStatus,
+          routes.javascript.Application.startCrawler,
+          routes.javascript.Application.stopCrawler
         )
       ).as("text/javascript")
   }

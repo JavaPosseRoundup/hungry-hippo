@@ -1,10 +1,11 @@
-@timer("Hello Play Akka Angular WebSocket") {
+@main("Hungry Hippo") {
 <div class="jumbotron" ng-app="StatusController" ng-controller="mainController">
     <div class="container">
         <div class="col-sm-12">
             <h1>
                 Status: {{status}}
             </h1>
+            <button type="button" ng-click="crawlCommand()">{{crawlButtonText}}</button>
         </div>
 
     </div>
