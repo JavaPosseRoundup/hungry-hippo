@@ -1,8 +1,9 @@
 package com.javaposse.hungryhippo.actors
 
-import scala.xml.NodeSeq
-import akka.actor.Actor
+import akka.actor.{Props, Actor}
+import akka.routing.RoundRobinRouter
 import com.javaposse.hungryhippo.models.Coordinate
+import scala.xml.NodeSeq
 
 /**
  * Given a maven-metadata.xml, we create Coordinate that need to be downloaded by the loadCoordinateActor
@@ -24,6 +25,9 @@ import com.javaposse.hungryhippo.models.Coordinate
  * </metadata>
  */
 class ParseMavenMetadataActor extends Actor {
+  lazy val loadCoordinateRouter = context.actorOf(Props[LoadCoordinateActor].withRouter(
+    RoundRobinRouter(nrOfInstances = 5)), "loadCoordinate")
+
   override def receive = {
     case p: ParseMavenMetadata => {
       context.system.log.info(s"parsing metadata ${p.dir.uri}")
@@ -35,7 +39,7 @@ class ParseMavenMetadataActor extends Actor {
 
       val coordinates = versions.map( Coordinate(groupId, artifactId, _) )
       coordinates.map(LoadCoordinate(p.dir, _)).foreach {
-        context.actorSelection("/user/loadCoordinate") ! _
+        loadCoordinateRouter ! _
       }
     }
   }

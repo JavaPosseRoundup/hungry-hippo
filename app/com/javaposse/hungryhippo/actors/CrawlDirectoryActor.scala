@@ -1,10 +1,11 @@
 package com.javaposse.hungryhippo.actors
 
-import akka.actor.Actor
+import akka.actor.{Props, Actor}
+import akka.routing.RoundRobinRouter
+import com.javaposse.hungryhippo.directory.SubdirectoryProvider
+import play.api.libs.ws.WS.WSRequestHolder
 import play.api.libs.ws._
 import scala.concurrent.Future
-import play.api.libs.ws.WS.WSRequestHolder
-import com.javaposse.hungryhippo.directory.SubdirectoryProvider
 
 /**
  * First look at maven-metadata.xml, then fallback to a directory listing
@@ -12,6 +13,8 @@ import com.javaposse.hungryhippo.directory.SubdirectoryProvider
 class CrawlDirectoryActor extends Actor {
 
   implicit val context2 = scala.concurrent.ExecutionContext.Implicits.global
+  private lazy val parseMavenMetadataRouter = context.actorOf(Props[ParseMavenMetadataActor].withRouter(
+    RoundRobinRouter(nrOfInstances = 5)), "parseMavenMetadata")
 
   override def receive = {
     case d: CrawlDirectory =>
@@ -23,8 +26,7 @@ class CrawlDirectoryActor extends Actor {
         case response: Response =>
           response.status match {
             case x if 200 until 300 contains x => {
-              // Send to ParseMavenMetadataActor
-              context.actorSelection("/user/parseMavenMetadata") ! ParseMavenMetadata(d, response.xml)
+              parseMavenMetadataRouter ! ParseMavenMetadata(d, response.xml)
             }
             case 404 => {
                 fallbackToHtml(d)
@@ -51,7 +53,7 @@ class CrawlDirectoryActor extends Actor {
         response.status match {
           case x if 200 until 300 contains x => {
             SubdirectoryProvider.findDirectories(response.body).map(d.subdirectory(_)).foreach {
-              context.actorSelection("/user/crawlDirectory") ! _
+              self ! _
             }
           }
           case _ => recordUnknownStatus(d, response)
