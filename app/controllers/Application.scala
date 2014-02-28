@@ -52,7 +52,7 @@ object Application extends Controller {
 
   def crawlerStatusWs = WebSocket.async[JsValue] { request =>
     val (out, channel) = Concurrent.broadcast[JsValue]
-    val listeningActor = Akka.system.actorOf(Props(classOf[WebSocketActor], ActorRefs.crawlControlActor, channel))
+    val listeningActor = Akka.system.actorOf(Props(classOf[WebSocketActor], ActorRefs.notificationActor, channel))
 
     val in = Iteratee.foreach[JsValue] { message =>
       Logger.info(s"Received WebSocket message: $message")
