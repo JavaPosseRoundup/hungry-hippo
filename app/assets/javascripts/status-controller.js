@@ -6,7 +6,13 @@ function mainController($scope, $http) {
     var startingToken = "starting";
     var stoppingToken = "stopping";
 
-	$scope.status = "retrieving";
+    var crawlStateChange = "CrawlStateChanged";
+    var crawlDir = "CrawlDir";
+
+    var maxDisplayDirs = 10;
+
+	$scope.crawlState = "retrieving";
+	$scope.dirs = [];
 	$scope.crawlButtonText = "pending";
 
     // TODO: how do you recover from connection issues?
@@ -17,17 +23,27 @@ function mainController($scope, $http) {
 
         $scope.socket.onmessage =  function (msg) {
           $scope.$apply( function() {
-                $scope.status = msg.data;
+                var event = JSON.parse(msg.data);
+                if (event.eventType === crawlStateChange) {
+                    $scope.crawlState = event.crawlState;
+                } else if (event.eventType === crawlDir) {
+                    console.log("got crawl dir " + event.dir)
+                    var len = $scope.dirs.length
+                    if (len >= maxDisplayDirs) {
+                        $scope.dirs.splice(0, 1 + len - maxDisplayDirs);
+                    }
+                    $scope.dirs.push(event.dir);
+                }
             })
           }
 	}
 
 	$http.get(jsRoutes.controllers.Application.crawlerStatus().url)
 		.success(function(data) {
-			$scope.status = data;
-			if(data.state == "Started") {
+			$scope.crawlState = data.crawlState;
+			if(data.crawlState == "Started") {
 			    $scope.crawlButtonText = stopToken;
-			} else if (data.state == "Stopped") {
+			} else if (data.crawlState == "Stopped") {
 			    $scope.crawlButtonText = startToken;
 			}
 			doWebSocket();
@@ -65,4 +81,3 @@ function mainController($scope, $http) {
 //            })
     }
 }
-

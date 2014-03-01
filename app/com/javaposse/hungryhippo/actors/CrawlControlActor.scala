@@ -27,7 +27,7 @@ class CrawlControlActor(notificationActor: ActorRef) extends Actor {
       state = Started
       notificationActor ! CrawlStateChanged(state)
 
-      crawlDirectoryRouter = Some(context.actorOf(Props[CrawlDirectoryActor].withRouter(
+      crawlDirectoryRouter = Some(context.actorOf(Props(classOf[CrawlDirectoryActor], notificationActor).withRouter(
         RoundRobinRouter(nrOfInstances = 5)), "crawlDirectory"))
 
       val maybeDirs: Option[List[String]] = Play.current.configuration.getStringList("crawl.roots").map(_.toList)

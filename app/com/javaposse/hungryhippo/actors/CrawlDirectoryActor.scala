@@ -1,16 +1,17 @@
 package com.javaposse.hungryhippo.actors
 
-import akka.actor.{Props, Actor}
+import akka.actor.{ActorRef, Props, Actor}
 import akka.routing.RoundRobinRouter
 import com.javaposse.hungryhippo.directory.SubdirectoryProvider
 import play.api.libs.ws.WS.WSRequestHolder
 import play.api.libs.ws._
 import scala.concurrent.Future
+import com.javaposse.hungryhippo.event.Events.DirectoryCrawled
 
 /**
  * First look at maven-metadata.xml, then fallback to a directory listing
  */
-class CrawlDirectoryActor extends Actor {
+class CrawlDirectoryActor(notificationActor: ActorRef) extends Actor {
 
   implicit val context2 = scala.concurrent.ExecutionContext.Implicits.global
   private lazy val parseMavenMetadataRouter = context.actorOf(Props[ParseMavenMetadataActor].withRouter(
@@ -19,6 +20,7 @@ class CrawlDirectoryActor extends Actor {
   override def receive = {
     case d: CrawlDirectory =>
       context.system.log.info(s"started crawling ${d.uri}")
+      notificationActor ! DirectoryCrawled(d)
       val metadataUri = s"${d.uri}/maven-metadata.xml"
       val holder : WSRequestHolder = WS.url(metadataUri).withFollowRedirects(true).withRequestTimeout(10000)
       val futureResponse : Future[Response] = holder.get()
