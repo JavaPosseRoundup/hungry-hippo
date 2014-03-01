@@ -3,11 +3,13 @@
     <div class="container">
         <div class="col-sm-12">
             <h1>
-                Status: {{status}}
+                Crawling {{crawlState}}
             </h1>
             <button type="button" ng-click="crawlCommand()">{{crawlButtonText}}</button>
         </div>
-
+        <div ng-repeat="dir in dirs">
+            {{dir}}
+        </div>
     </div>
 </div>
 }

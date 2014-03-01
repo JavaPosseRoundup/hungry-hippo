@@ -27,7 +27,7 @@ object Application extends Controller {
     val stateResponse = crawlControlActor ? GetCrawlStatus
     stateResponse.map {
       case status: CrawlState =>
-        val json = Map("state" -> status.toString)
+        val json = Map("crawlState" -> status.toString)
         val out: JsValue = Json.toJson(json)
 
         Ok(out.toString)
