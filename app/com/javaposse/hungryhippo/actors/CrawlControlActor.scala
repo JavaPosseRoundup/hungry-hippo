@@ -3,8 +3,6 @@ package com.javaposse.hungryhippo.actors
 import akka.actor.ActorRef
 import akka.actor.{PoisonPill, Props, Actor}
 import akka.routing.RoundRobinRouter
-import play.api.Play
-import scala.collection.JavaConversions._
 import com.javaposse.hungryhippo.event.Events.CrawlStateChanged
 
 sealed abstract class CrawlControlMessage
@@ -16,7 +14,7 @@ sealed abstract class CrawlState
 case object Started extends CrawlState
 case object Stopped extends CrawlState
 
-class CrawlControlActor(notificationActor: ActorRef) extends Actor {
+class CrawlControlActor(notificationActor: ActorRef, maybeDirs: Option[List[String]]) extends Actor {
 
   private var state: CrawlState = Stopped
 
@@ -30,7 +28,6 @@ class CrawlControlActor(notificationActor: ActorRef) extends Actor {
       crawlDirectoryRouter = Some(context.actorOf(Props(classOf[CrawlDirectoryActor], notificationActor).withRouter(
         RoundRobinRouter(nrOfInstances = 5)), "crawlDirectory"))
 
-      val maybeDirs: Option[List[String]] = Play.current.configuration.getStringList("crawl.roots").map(_.toList)
       maybeDirs foreach { dirs: List[String] =>
           dirs foreach { dir: String =>
             crawlDirectoryRouter.foreach(_ ! CrawlDirectory(dir, ""))

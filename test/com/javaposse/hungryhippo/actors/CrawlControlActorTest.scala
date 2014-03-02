@@ -1,48 +1,56 @@
 package com.javaposse.hungryhippo.actors
 
-import org.scalatest.{BeforeAndAfterAll, Matchers, FunSuiteLike}
-import akka.testkit.{ImplicitSender, TestKit}
-import akka.actor.{Props, ActorSystem}
-import scala.concurrent.duration._
-import akka.util.Timeout
+import akka.actor.{PoisonPill, ActorRef, Props, ActorSystem}
+import akka.testkit.{DefaultTimeout, ImplicitSender, TestKit}
+import org.scalatest._
 
-/**
- * Created by cmarks on 2/26/14.
- */
-class CrawlControlActorTest extends TestKit(ActorSystem("test")) with FunSuiteLike with Matchers
-with BeforeAndAfterAll with ImplicitSender {
+class CrawlControlActorTest extends TestKit(ActorSystem("test")) with DefaultTimeout with ImplicitSender
+with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach  {
+  lazy val notificationActor: ActorRef = system.actorOf(Props[NotificationActor])
+  private var crawlControlActor: Option[ActorRef] = None
 
   override def afterAll() {
     TestKit.shutdownActorSystem(system)
   }
 
-  implicit val askTimeout = Timeout(15.seconds)
-
-
-
-  test("start should indicated started") {
-    val actorRef = system.actorOf(Props(classOf[CrawlControlActor], ActorRefs.notificationActor))
-    actorRef ! StartCrawling
-
-    actorRef ! GetCrawlStatus
-    expectMsg(Started)
-
+  override def beforeEach() {
+    crawlControlActor = Some(system.actorOf(Props(classOf[CrawlControlActor], notificationActor,
+      Some(List("http://dl.bintray.com/nebula/gradle-plugins/")))))
   }
 
-  test("default status should be stopped") {
-    val actorRef = system.actorOf(Props(classOf[CrawlControlActor], ActorRefs.notificationActor))
-    actorRef ! GetCrawlStatus
-    expectMsg(Stopped)
+  override def afterEach() {
+    crawlControlActor.foreach(_ ! PoisonPill)
+    crawlControlActor = None
   }
 
-  test("start then stop should indicate proper states") {
-    val actorRef = system.actorOf(Props(classOf[CrawlControlActor], ActorRefs.notificationActor))
-    actorRef ! StartCrawling
-    actorRef ! GetCrawlStatus
-    expectMsg(Started)
+  "a CrawlControlActor" should {
 
-    actorRef ! StopCrawling
-    actorRef ! GetCrawlStatus
-    expectMsg(Stopped)
+    "indicate started when started" in {
+        crawlControlActor.foreach{ actorRef =>
+          actorRef ! StartCrawling
+          expectNoMsg
+          actorRef ! GetCrawlStatus
+          expectMsg(Started)
+      }
+
+    }
+
+    "have state stopped by default" in  {
+      crawlControlActor.foreach(_ ! GetCrawlStatus)
+      expectMsg(Stopped)
+    }
+
+    "indicate proper states after restart" in {
+      crawlControlActor.foreach{ actorRef =>
+        actorRef ! StartCrawling
+        expectNoMsg
+        actorRef ! GetCrawlStatus
+        expectMsg(Started)
+        actorRef ! StopCrawling
+        expectNoMsg
+        actorRef ! GetCrawlStatus
+        expectMsg(Stopped)
+      }
+    }
   }
 }
