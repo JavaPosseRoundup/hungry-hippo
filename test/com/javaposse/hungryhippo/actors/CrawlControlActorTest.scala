@@ -21,28 +21,28 @@ with BeforeAndAfterAll with ImplicitSender {
 
 
   test("start should indicated started") {
-    val actorRef = system.actorOf(Props[CrawlControlActor])
+    val actorRef = system.actorOf(Props(classOf[CrawlControlActor], ActorRefs.notificationActor))
     actorRef ! StartCrawling
 
-    actorRef ! CrawlState
+    actorRef ! GetCrawlStatus
     expectMsg(Started)
 
   }
 
   test("default status should be stopped") {
-    val actorRef = system.actorOf(Props[CrawlControlActor])
-    actorRef ! CrawlState
+    val actorRef = system.actorOf(Props(classOf[CrawlControlActor], ActorRefs.notificationActor))
+    actorRef ! GetCrawlStatus
     expectMsg(Stopped)
   }
 
   test("start then stop should indicate proper states") {
-    val actorRef = system.actorOf(Props[CrawlControlActor])
+    val actorRef = system.actorOf(Props(classOf[CrawlControlActor], ActorRefs.notificationActor))
     actorRef ! StartCrawling
-    actorRef ! CrawlState
+    actorRef ! GetCrawlStatus
     expectMsg(Started)
 
     actorRef ! StopCrawling
-    actorRef ! CrawlState
+    actorRef ! GetCrawlStatus
     expectMsg(Stopped)
   }
 }
