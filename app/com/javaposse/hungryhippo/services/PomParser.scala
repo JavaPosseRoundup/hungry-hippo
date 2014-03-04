@@ -4,13 +4,9 @@ import scala.xml.{NodeSeq, Elem, XML}
 import com.javaposse.hungryhippo.models.{Module, Coordinate}
 
 
-/**
- * Created by dmitry on 2/26/14.
- */
 class PomParser {
 
-    def parsePom(repoUrl: String, pomText: String) =
-    {
+    def parsePom(repoUrl: String, pomText: String) = {
         val pomXml: Elem = XML.loadString(pomText)
 
         val coordinate: Coordinate = parseCoordinate(pomXml)
@@ -20,7 +16,6 @@ class PomParser {
         }
 
         Module(coordinate, repoUrl,  dependencies)
-
     }
 
     def parseCoordinate(coordNode: NodeSeq): Coordinate = {
@@ -30,6 +25,5 @@ class PomParser {
         val version = (coordNode \ "version").text
 
         Coordinate(groupId, artifactId, version)
-
     }
 }

@@ -8,6 +8,16 @@ import play.api.libs.ws._
 import scala.concurrent.Future
 import com.javaposse.hungryhippo.event.Events.DirectoryCrawled
 
+case class CrawlDirectory( base: String, path: String ) {
+  def uri: String = {
+    s"${base}/${path}"
+  }
+
+  def subdirectory(subdir:String ): CrawlDirectory = {
+    CrawlDirectory(base, path + "/" + subdir)
+  }
+}
+
 /**
  * First look at maven-metadata.xml, then fallback to a directory listing
  */
@@ -66,13 +76,4 @@ class CrawlDirectoryActor(notificationActor: ActorRef) extends Actor {
   }
 }
 
-case class CrawlDirectory( base: String, path: String ) {
-  def uri: String = {
-    s"${base}/${path}"
-  }
-
-  def subdirectory(subdir:String ): CrawlDirectory = {
-      CrawlDirectory(base, path + "/" + subdir)
-  }
-}
 

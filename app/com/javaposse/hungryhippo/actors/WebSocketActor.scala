@@ -3,7 +3,6 @@ package com.javaposse.hungryhippo.actors
 import akka.actor.Actor
 import akka.actor.ActorRef
 import com.javaposse.hungryhippo.event.Events._
-import play.Logger
 import play.api.libs.iteratee.Concurrent
 import play.api.libs.json._
 
@@ -32,9 +31,6 @@ class WebSocketActor(notificationActor: ActorRef, channel: Concurrent.Channel[Js
       val out: JsValue = Json.toJson(json)
       channel.push(out)
     case directoryCrawled: DirectoryCrawled =>
-      Logger.info("***********")
-      Logger.info(directoryCrawled.toString)
-      Logger.info("***********")
       val json = Map("eventType" -> directoryCrawled.eventType.wireName,
         "dir" -> directoryCrawled.crawlDirectory.uri)
         val out: JsValue = Json.toJson(json)

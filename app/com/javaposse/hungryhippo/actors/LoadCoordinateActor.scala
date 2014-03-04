@@ -1,16 +1,15 @@
 package com.javaposse.hungryhippo.actors
 
-import com.javaposse.hungryhippo.models.Coordinate
 import akka.actor.{Props, Actor}
+import akka.pattern.ask
+import akka.routing.RoundRobinRouter
+import akka.util.Timeout
+import com.javaposse.hungryhippo.models.Coordinate
+import java.util.concurrent.TimeUnit
 import play.api.libs.ws.WS.WSRequestHolder
 import play.api.libs.ws.{Response, WS}
 import scala.concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
-import akka.pattern.ask
-import akka.pattern.pipe
-import akka.util.Timeout
-import java.util.concurrent.TimeUnit
-import akka.routing.RoundRobinRouter
 
 /**
  * Take a coordinate, and download the pom to pass on to pom parser
