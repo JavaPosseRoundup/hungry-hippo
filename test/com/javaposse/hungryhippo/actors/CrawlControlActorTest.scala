@@ -5,7 +5,8 @@ import akka.testkit.{DefaultTimeout, ImplicitSender, TestKit}
 import org.scalatest._
 
 class CrawlControlActorTest extends TestKit(ActorSystem("test")) with DefaultTimeout with ImplicitSender
-with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach  {
+  with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
+
   lazy val notificationActor: ActorRef = system.actorOf(Props[NotificationActor])
   private var crawlControlActor: Option[ActorRef] = None
 
