@@ -6,7 +6,6 @@ import com.javaposse.hungryhippo.TestChannel
 import com.javaposse.hungryhippo.event.Events.{DirectoryCrawl, DirectoryCrawled, CrawlStateChange, CrawlStateChanged}
 import org.scalatest.{BeforeAndAfterEach, BeforeAndAfterAll, Matchers, WordSpecLike}
 import play.api.libs.json.{Json, JsValue}
-import play.api.libs.iteratee.Concurrent
 
 class WebSocketActorTest extends TestKit(ActorSystem("test")) with DefaultTimeout with ImplicitSender
 with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
